@@ -88,7 +88,7 @@ const PROJECT_V2_QUERY = `
                   createdAt
                   closedAt
                   updatedAt
-                  assignees(first: 5) { nodes { login } }
+                  assignees(first: 5) { nodes { login name } }
                   labels(first: 10) { nodes { name } }
                   url
                   comments(first: 50) {
@@ -110,7 +110,7 @@ const PROJECT_V2_QUERY = `
                   closedAt
                   mergedAt
                   updatedAt
-                  assignees(first: 5) { nodes { login } }
+                  assignees(first: 5) { nodes { login name } }
                   labels(first: 10) { nodes { name } }
                   url
                   comments(first: 50) {
@@ -150,7 +150,7 @@ const PROJECT_V2_QUERY = `
                   createdAt
                   closedAt
                   updatedAt
-                  assignees(first: 5) { nodes { login } }
+                  assignees(first: 5) { nodes { login name } }
                   labels(first: 10) { nodes { name } }
                   url
                   comments(first: 50) {
@@ -172,7 +172,7 @@ const PROJECT_V2_QUERY = `
                   closedAt
                   mergedAt
                   updatedAt
-                  assignees(first: 5) { nodes { login } }
+                  assignees(first: 5) { nodes { login name } }
                   labels(first: 10) { nodes { name } }
                   url
                   comments(first: 50) {
@@ -205,7 +205,7 @@ function normalize(projectV2){
     closed_at: it.closedAt || it.mergedAt || null,
     created_at: it.createdAt,
     updated_at: it.updatedAt || it.closedAt || it.mergedAt || it.createdAt,
-    assignee: it.assignees?.nodes?.[0]?.login || 'Unassigned',
+    assignee: it.assignees?.nodes?.[0]?.name || it.assignees?.nodes?.[0]?.login || 'Unassigned',
     labels: it.labels?.nodes?.map(l=>l.name) || [],
     number: it.number,
     comments: it.comments?.nodes?.map(c=>({
