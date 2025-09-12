@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import AISummaryModal from './AISummaryModal';
-import { Settings, Calendar, Users, MessageSquare, X, ArrowRight, Target, TrendingUp, Clock, CheckCircle, AlertTriangle, DollarSign, Activity, Layers, Zap, Sparkles } from 'lucide-react';
+import { Settings, Calendar, Users, MessageSquare, X, ArrowRight, Target, TrendingUp, Clock, CheckCircle, AlertTriangle, Activity, Layers, Zap, Sparkles } from 'lucide-react';
 import EllaCapLogo from '../assets/ellacap-logo.png';
 
 const PROJECT_OWNER = 'buddahb88';
@@ -14,56 +14,48 @@ const SOW_PHASES = {
   'phase1a': {
     name: 'Phase 1A - Foundation',
     description: 'Project bootstrap, security, and infrastructure setup',
-    budget: 2000,
     duration: '4 weeks',
     keyDeliverables: ['Django backend with REST API', 'PostgreSQL database setup', 'React frontend with TypeScript', 'Azure infrastructure setup', 'CI/CD pipeline']
   },
   'phase1b': {
     name: 'Phase 1B - Core Features', 
     description: 'Document processing and AI integration',
-    budget: 2000,
     duration: '4 weeks',
     keyDeliverables: ['Document upload system', 'Azure Form Recognizer integration', 'OpenAI GPT-4 extraction', 'Data validation pipeline']
   },
   'phase1c': {
     name: 'Phase 1C - MVP Polish',
     description: 'User interface and feature completion',
-    budget: 2000,
     duration: '4 weeks', 
     keyDeliverables: ['Review & confirmation UI', 'Role-based permissions', 'Performance optimization', 'User documentation']
   },
   'phase1-completion': {
     name: 'Phase 1 Completion',
     description: 'Feature-ready milestone completion',
-    budget: 4000,
     duration: 'Milestone',
-    keyDeliverables: ['Complete MVP with document ingestion', 'Financial data extraction', 'Export functionality']
+    keyDeliverables: ['Complete MVP with document ingestion', 'Data extraction capabilities', 'Export functionality']
   },
   'phase2a': {
     name: 'Phase 2A - Analysis Framework',
-    description: 'Financial analysis and KPI interfaces',
-    budget: 5000,
+    description: 'Data analysis and KPI interfaces',
     duration: '4 weeks',
     keyDeliverables: ['PE-focused KPI queries', 'Visual analytics', 'Deal evaluation framework']
   },
   'phase2b': {
     name: 'Phase 2B - Advanced Features',
     description: 'Scenario modeling and reporting',
-    budget: 5000,
     duration: '4 weeks',
     keyDeliverables: ['Scenario planning tools', 'Forward projections', 'Deal comparison features']
   },
   'phase2c': {
     name: 'Phase 2C - Production Ready',
     description: 'Multi-tenant architecture and DevOps',
-    budget: 5000,
     duration: '4 weeks',
     keyDeliverables: ['Multi-tenant architecture', 'Production deployment', 'Enhanced security & monitoring']
   },
   'phase2-completion': {
     name: 'Phase 2 Completion',
-    description: 'Production-ready milestone completion', 
-    budget: 15000,
+    description: 'Production-ready milestone completion',
     duration: 'Milestone',
     keyDeliverables: ['Full production environment', 'Advanced dashboards', 'Enhanced AI insights']
   }
@@ -261,7 +253,6 @@ function calculatePhaseMetrics(issues) {
       completedIssues: 0,
       progress: 0,
       status: 'upcoming',
-      budgetSpent: 0,
       issues: []
     };
   });
@@ -285,9 +276,6 @@ function calculatePhaseMetrics(issues) {
     
     if (phase.totalIssues > 0) {
       phase.progress = Math.round((phase.completedIssues / phase.totalIssues) * 100);
-      
-      // Estimate budget spent based on progress
-      phase.budgetSpent = Math.round(phase.budget * (phase.progress / 100));
       
       // Determine status
       if (phase.progress === 100) {
@@ -340,10 +328,6 @@ function transform({project, issues}){
     phase: getPhaseFromLabels(i.labels)
   }));
   
-  // Calculate total budget metrics
-  const totalBudget = Object.values(phaseMetrics).reduce((sum, phase) => sum + phase.budget, 0);
-  const totalBudgetSpent = Object.values(phaseMetrics).reduce((sum, phase) => sum + phase.budgetSpent, 0);
-  
   // Calculate realistic target date based on phase progress and SOW timeline
   const projectStart = new Date(project.created_at);
   const totalWeeks = 24; // 16-24 weeks per SOW, using upper bound
@@ -378,11 +362,9 @@ function transform({project, issues}){
       currentPhase: phase,
       overallProgress: progress,
       healthStatus: health,
-      totalBudgetHours:480,
+      totalHours: 480,
       hoursSpent: Math.round(480*(progress/100)*0.9),
-      teamSize:6,
-      totalBudget,
-      totalBudgetSpent
+      teamSize: 6
     },
     milestones,
     features,
@@ -493,7 +475,6 @@ const ClientDashboard = () => {
 
   const completedFeatures = data.features.filter(f => f.status === 'completed').length;
   const totalFeatures = data.features.length;
-  const budgetUsed = data.project.totalBudget > 0 ? ((data.project.totalBudgetSpent / data.project.totalBudget) * 100).toFixed(1) : '0';
   const daysToTarget = Math.ceil((new Date(data.project.targetDate) - new Date()) / (1000 * 60 * 60 * 24));
 
   // Filter features based on current filters
@@ -600,13 +581,13 @@ const ClientDashboard = () => {
 
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-amber-100 rounded-xl">
-                <DollarSign className="h-6 w-6 text-amber-600" />
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="text-3xl font-bold text-slate-900">{budgetUsed}%</span>
+              <span className="text-3xl font-bold text-slate-900">{data.project.teamSize}</span>
             </div>
-            <h3 className="font-semibold text-slate-700 mb-1">Budget Used</h3>
-            <p className="text-sm text-slate-500">${data.project.totalBudgetSpent.toLocaleString()} of ${data.project.totalBudget.toLocaleString()}</p>
+            <h3 className="font-semibold text-slate-700 mb-1">Team Members</h3>
+            <p className="text-sm text-slate-500">Active contributors</p>
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
@@ -660,8 +641,8 @@ const ClientDashboard = () => {
                 
                 <div className="space-y-2 text-xs text-slate-600">
                   <div className="flex justify-between">
-                    <span>Budget:</span>
-                    <span>${phase.budget.toLocaleString()}</span>
+                    <span>Duration:</span>
+                    <span>{phase.duration}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Issues:</span>
@@ -981,10 +962,10 @@ const ClientDashboard = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="text-blue-600 text-sm font-medium">Budget</div>
-                    <div className="text-blue-900 text-xl font-bold">${selectedPhase.budget.toLocaleString()}</div>
+                    <div className="text-blue-600 text-sm font-medium">Duration</div>
+                    <div className="text-blue-900 text-xl font-bold">{selectedPhase.duration}</div>
                   </div>
                   <div className="bg-emerald-50 rounded-lg p-4">
                     <div className="text-emerald-600 text-sm font-medium">Progress</div>
