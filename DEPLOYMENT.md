@@ -6,23 +6,17 @@
 - **Build System:** Vite + React
 - **Auto-deployment:** GitHub Actions
 
-## 🔧 Configuration Required
-To fully activate the application, you need to configure these environment variables in Azure:
+## ✅ Configuration Complete
+All environment variables have been configured in Azure:
 
-1. **VITE_GITHUB_TOKEN** - Your GitHub Personal Access Token
-2. **VITE_AZURE_OPENAI_API_KEY** - Your Azure OpenAI API key  
-3. **VITE_AZURE_OPENAI_ENDPOINT** - Your Azure OpenAI endpoint URL
+✅ **VITE_GITHUB_TOKEN** - Configured  
+✅ **VITE_AZURE_OPENAI_KEY** - Configured  
+✅ **VITE_AZURE_OPENAI_ENDPOINT** - Configured  
+✅ **VITE_AZURE_OPENAI_DEPLOYMENT** - Configured  
+✅ **VITE_AZURE_OPENAI_API_VERSION** - Configured  
 
-## 📝 Environment Variables Setup
-Use the Azure CLI to set these values:
-
-```bash
-az staticwebapp appsettings set --name ellacap-eq-dashboard \
-  --setting-names \
-  "VITE_GITHUB_TOKEN=your_actual_github_token" \
-  "VITE_AZURE_OPENAI_API_KEY=your_actual_openai_key" \
-  "VITE_AZURE_OPENAI_ENDPOINT=your_actual_openai_endpoint"
-```
+## 📝 Environment Variables Status
+All variables from your `.env` file have been automatically configured in Azure Static Web Apps.
 
 ## 🔄 Automatic Deployments
 - Every push to `master` branch triggers automatic deployment
