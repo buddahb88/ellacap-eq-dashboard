@@ -581,17 +581,6 @@ const ClientDashboard = () => {
 
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <span className="text-3xl font-bold text-slate-900">{data.project.teamSize}</span>
-            </div>
-            <h3 className="font-semibold text-slate-700 mb-1">Team Members</h3>
-            <p className="text-sm text-slate-500">Active contributors</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-purple-100 rounded-xl">
                 <Target className="h-6 w-6 text-purple-600" />
               </div>
@@ -599,6 +588,17 @@ const ClientDashboard = () => {
             </div>
             <h3 className="font-semibold text-slate-700 mb-1">Days to Target</h3>
             <p className="text-sm text-slate-500">Estimated completion</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <Activity className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="text-3xl font-bold text-slate-900">{data.recentActivity.length}</span>
+            </div>
+            <h3 className="font-semibold text-slate-700 mb-1">Recent Updates</h3>
+            <p className="text-sm text-slate-500">Latest activity items</p>
           </div>
         </div>
 
@@ -655,33 +655,6 @@ const ClientDashboard = () => {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Phase Summary */}
-          <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-            <h4 className="font-semibold text-blue-900 mb-3">Contract Overview</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-blue-600 font-medium">Phase 1 Total:</span>
-                <div className="text-blue-900 font-bold">$10,000</div>
-                <div className="text-blue-700 text-xs">Foundation & MVP</div>
-              </div>
-              <div>
-                <span className="text-blue-600 font-medium">Phase 2 Total:</span>
-                <div className="text-blue-900 font-bold">$30,000</div>
-                <div className="text-blue-700 text-xs">Production Ready</div>
-              </div>
-              <div>
-                <span className="text-blue-600 font-medium">Timeline:</span>
-                <div className="text-blue-900 font-bold">16-24 Weeks</div>
-                <div className="text-blue-700 text-xs">Two-phase delivery</div>
-              </div>
-              <div>
-                <span className="text-blue-600 font-medium">Budget Used:</span>
-                <div className="text-blue-900 font-bold">${data.project.totalBudgetSpent.toLocaleString()}</div>
-                <div className="text-blue-700 text-xs">{budgetUsed}% complete</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1164,7 +1137,7 @@ const ClientDashboard = () => {
                             {SOW_PHASES[selectedFeature.phase]?.name || selectedFeature.phase}
                           </span>
                           <span className="text-sm text-purple-700">
-                            ${SOW_PHASES[selectedFeature.phase]?.budget.toLocaleString()} Budget
+                            {SOW_PHASES[selectedFeature.phase]?.duration || 'Duration TBD'}
                           </span>
                         </div>
                       ) : (
