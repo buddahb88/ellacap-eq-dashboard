@@ -364,7 +364,7 @@ function transform({project, issues}){
       healthStatus: health,
       totalHours: 480,
       hoursSpent: Math.round(480*(progress/100)*0.9),
-      teamSize: 6
+      teamSize: 1
     },
     milestones,
     features,

@@ -35,7 +35,7 @@ Brief overview of where we stand and what it means for Ellacap's deal evaluation
 
 ## ⏱️ Project Efficiency
 - Development velocity and task completion rates
-- Team productivity and collaboration effectiveness
+- Developer productivity and code quality
 - Timeline adherence and milestone achievement
 - Quality metrics and technical debt management
 
