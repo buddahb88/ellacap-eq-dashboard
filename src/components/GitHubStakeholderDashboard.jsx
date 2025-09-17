@@ -1,9 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import AISummaryModal from './AISummaryModal';
+import { preprocessMarkdownContent } from '../services/aiService';
 import { Settings, Calendar, Users, MessageSquare, X, ArrowRight, Target, TrendingUp, Clock, CheckCircle, AlertTriangle, Activity, Layers, Zap, Sparkles } from 'lucide-react';
 import EllaCapLogo from '../assets/ellacap-logo.png';
+
+// InlineImage: React-controlled inline image with fallback link on error
+function InlineImage({ src, alt, title, styleProps = {}, className = '' }) {
+  const [failed, setFailed] = React.useState(false);
+
+  if (failed) {
+    return (
+      <a href={src} target="_blank" rel="noopener noreferrer" className="text-sm text-red-600 underline">
+        Open image: {src}
+      </a>
+    );
+  }
+
+  return (
+    <a href={src} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
+      <img
+        src={src}
+        alt={alt || 'image'}
+        title={title}
+        className={className}
+        style={styleProps}
+        onError={() => {
+          console.error('Image failed to load:', src);
+          setFailed(true);
+        }}
+      />
+    </a>
+  );
+}
 
 const PROJECT_OWNER = 'buddahb88';
 const PROJECT_REPO = 'EllaCap_EQ';
@@ -314,6 +345,7 @@ function transform({project, issues}){
   // Remove health status logic - just use 'in-progress'
   const health = 'in-progress';
   
+  // Update the transform function to preprocess markdown content
   const features = issues.map(i => ({
     id: i.id,
     title: i.title,
@@ -323,8 +355,11 @@ function transform({project, issues}){
     assignee: i.assignee,
     completedDate: i.closed_at,
     businessValue: `GitHub Issue #${i.number}`,
-    body: i.body,
-    comments: Array.isArray(i.comments) ? i.comments : [],
+    body: preprocessMarkdownContent(i.body), // Process the body content
+    comments: Array.isArray(i.comments) ? i.comments.map(comment => ({
+      ...comment,
+      body: preprocessMarkdownContent(comment.body) // Process comment content
+    })) : [],
     phase: getPhaseFromLabels(i.labels)
   }));
   
@@ -372,6 +407,44 @@ function transform({project, issues}){
     phaseMetrics
   };
 }
+
+// SOW document text - moved to proper location before component
+const SOW_DOCUMENT = `
+**EllaCap EQ Financial Data Platform - Statement of Work**
+
+**Project Overview:**
+Omega Notes will develop a financial data platform (codename "EQ") for Ellacap to streamline internal deal evaluation and portfolio management. The platform will use AI-powered insights to capture, process, and analyze financial documents.
+
+**Total Contract Value:** $40,000
+- Phase 1: Features Ready - $10,000 (8-12 weeks)
+- Phase 2: Production Ready - $30,000 (8-12 weeks)
+
+**Phase 1 Deliverables:**
+- Phase 1A ($2,000): Django backend with REST API, PostgreSQL database, React frontend with TypeScript, Azure infrastructure setup, CI/CD pipeline
+- Phase 1B ($2,000): Document upload system, Azure Form Recognizer integration, OpenAI GPT-4 extraction, Data validation pipeline  
+- Phase 1C ($2,000): Review & confirmation UI, Role-based permissions, Performance optimization, User documentation
+- Phase 1 Completion ($4,000): Complete MVP with document ingestion, Financial data extraction, Export functionality
+
+**Phase 2 Deliverables:**
+- Phase 2A ($5,000): PE-focused KPI queries, Visual analytics, Deal evaluation framework
+- Phase 2B ($5,000): Scenario planning tools, Forward projections, Deal comparison features
+- Phase 2C ($5,000): Multi-tenant architecture, Production deployment, Enhanced security & monitoring
+- Phase 2 Completion ($15,000): Full production environment, Advanced dashboards, Enhanced AI insights
+
+**Technology Stack:**
+- Backend: Python with Django REST Framework
+- Database: PostgreSQL with PE-focused schema  
+- Frontend: React with TypeScript and professional UI components
+- AI Services: OpenAI GPT-4 API, Azure Form Recognizer
+- Infrastructure: Microsoft Azure (Blob Storage, App Service, Azure Database)
+- Authentication: Azure Active Directory B2C
+
+**Key Success Metrics:**
+- Complete MVP enabling document ingestion and AI-powered financial data extraction
+- Scalable foundation for future commercialization
+- Production-ready multi-tenant architecture
+- Enhanced AI insights for deal evaluation and portfolio management
+`;
 
 const ClientDashboard = () => {
   const [data, setData] = useState(null);
@@ -1041,6 +1114,7 @@ const ClientDashboard = () => {
                     
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
                       components={{
                         h1: ({children}) => <h1 className="text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">{children}</h1>,
                         h2: ({children}) => <h2 className="text-xl font-bold text-slate-800 mb-3 mt-6">{children}</h2>,
@@ -1049,7 +1123,7 @@ const ClientDashboard = () => {
                         ul: ({children}) => <ul className="list-disc pl-6 space-y-1 mb-4">{children}</ul>,
                         ol: ({children}) => <ol className="list-decimal pl-6 space-y-1 mb-4">{children}</ol>,
                         li: ({children}) => <li className="text-slate-700 leading-relaxed">{children}</li>,
-                        p: ({children}) => <p className="text-slate-700 leading-relaxed mb-4">{children}</p>,
+                        p: ({children}) => <div className="text-slate-700 leading-relaxed mb-4">{children}</div>,
                         strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
                         em: ({children}) => <em className="italic text-slate-600">{children}</em>,
                         code: ({inline, children}) => 
@@ -1061,6 +1135,21 @@ const ClientDashboard = () => {
                             {children}
                           </blockquote>
                         ),
+                        img: ({src, alt, title, width, height, ...props}) => {
+                          const caption = title || alt || '';
+                          const imgStyleInline = {
+                            display: 'inline-block',
+                            verticalAlign: 'middle',
+                            maxWidth: width && !width.includes('%') ? `${Math.min(parseInt(width), 800)}px` : '100%',
+                            height: 'auto'
+                          };
+                          return (
+                            <>
+                              <InlineImage src={src} alt={alt} title={title} styleProps={imgStyleInline} className="rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow border border-slate-200" />
+                              {caption ? <span className="ml-2 text-xs text-slate-500 italic">{caption}</span> : null}
+                            </>
+                          );
+                        },
                         table: ({children}) => (
                           <div className="overflow-x-auto my-4">
                             <table className="min-w-full divide-y divide-slate-200 border border-slate-200 rounded-lg">
@@ -1191,6 +1280,7 @@ const ClientDashboard = () => {
                           <div className="prose prose-slate max-w-none">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
+                              rehypePlugins={[rehypeRaw]}
                               components={{
                                 h1: ({children}) => <h1 className="text-lg font-bold text-slate-900 mb-2">{children}</h1>,
                                 h2: ({children}) => <h2 className="text-base font-bold text-slate-800 mb-2">{children}</h2>,
@@ -1198,7 +1288,7 @@ const ClientDashboard = () => {
                                 ul: ({children}) => <ul className="list-disc pl-4 space-y-1 mb-3">{children}</ul>,
                                 ol: ({children}) => <ol className="list-decimal pl-4 space-y-1 mb-3">{children}</ol>,
                                 li: ({children}) => <li className="text-slate-700">{children}</li>,
-                                p: ({children}) => <p className="text-slate-700 leading-relaxed mb-3">{children}</p>,
+                                p: ({children}) => <div className="text-slate-700 leading-relaxed mb-3">{children}</div>,
                                 strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
                                 em: ({children}) => <em className="italic text-slate-600">{children}</em>,
                                 code: ({inline, children}) => 
@@ -1210,16 +1300,21 @@ const ClientDashboard = () => {
                                     {children}
                                   </blockquote>
                                 ),
-                                a: ({href, children}) => (
-                                  <a 
-                                    href={href} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 underline"
-                                  >
-                                    {children}
-                                  </a>
-                                )
+                                img: ({src, alt, title, width, height, ...props}) => {
+              const caption = title || alt || '';
+              const imgStyleInline = {
+                display: 'inline-block',
+                verticalAlign: 'middle',
+                maxWidth: width && !width.includes('%') ? `${Math.min(parseInt(width), 600)}px` : '100%',
+                height: 'auto'
+              };
+              return (
+                <>
+                  <InlineImage src={src} alt={alt} title={title} styleProps={imgStyleInline} />
+                  {caption ? <span className="ml-2 text-xs text-slate-500 italic">{caption}</span> : null}
+                </>
+              );
+            }
                               }}
                             >
                               {comment.body}
@@ -1259,6 +1354,7 @@ const ClientDashboard = () => {
             <div className="p-6 overflow-y-auto flex-1">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   code({node, inline, className, children, ...props}) {
                     return !inline ? (
@@ -1302,41 +1398,3 @@ const ClientDashboard = () => {
 };
 
 export default ClientDashboard;
-
-// SOW document text - add this constant before the ClientDashboard component
-const SOW_DOCUMENT = `
-**EllaCap EQ Financial Data Platform - Statement of Work**
-
-**Project Overview:**
-Omega Notes will develop a financial data platform (codename "EQ") for Ellacap to streamline internal deal evaluation and portfolio management. The platform will use AI-powered insights to capture, process, and analyze financial documents.
-
-**Total Contract Value:** $40,000
-- Phase 1: Features Ready - $10,000 (8-12 weeks)
-- Phase 2: Production Ready - $30,000 (8-12 weeks)
-
-**Phase 1 Deliverables:**
-- Phase 1A ($2,000): Django backend with REST API, PostgreSQL database, React frontend with TypeScript, Azure infrastructure setup, CI/CD pipeline
-- Phase 1B ($2,000): Document upload system, Azure Form Recognizer integration, OpenAI GPT-4 extraction, Data validation pipeline  
-- Phase 1C ($2,000): Review & confirmation UI, Role-based permissions, Performance optimization, User documentation
-- Phase 1 Completion ($4,000): Complete MVP with document ingestion, Financial data extraction, Export functionality
-
-**Phase 2 Deliverables:**
-- Phase 2A ($5,000): PE-focused KPI queries, Visual analytics, Deal evaluation framework
-- Phase 2B ($5,000): Scenario planning tools, Forward projections, Deal comparison features
-- Phase 2C ($5,000): Multi-tenant architecture, Production deployment, Enhanced security & monitoring
-- Phase 2 Completion ($15,000): Full production environment, Advanced dashboards, Enhanced AI insights
-
-**Technology Stack:**
-- Backend: Python with Django REST Framework
-- Database: PostgreSQL with PE-focused schema  
-- Frontend: React with TypeScript and professional UI components
-- AI Services: OpenAI GPT-4 API, Azure Form Recognizer
-- Infrastructure: Microsoft Azure (Blob Storage, App Service, Azure Database)
-- Authentication: Azure Active Directory B2C
-
-**Key Success Metrics:**
-- Complete MVP enabling document ingestion and AI-powered financial data extraction
-- Scalable foundation for future commercialization
-- Production-ready multi-tenant architecture
-- Enhanced AI insights for deal evaluation and portfolio management
-`;

@@ -10,6 +10,39 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true // Only for development, use backend proxy in production
 });
 
+// Export this helper function so it can be used in other components
+export function preprocessMarkdownContent(content) {
+  if (!content) return content;
+  
+  // More comprehensive HTML img tag to markdown conversion
+  let processedContent = content;
+  
+  // Handle img tags with various attribute orders and formats
+  processedContent = processedContent.replace(
+    /<img[^>]*src\s*=\s*["']([^"']+)["'][^>]*alt\s*=\s*["']([^"']*)["'][^>]*\/?>/gi,
+    '![Image: $2]($1)'
+  );
+  
+  processedContent = processedContent.replace(
+    /<img[^>]*alt\s*=\s*["']([^"']*)["'][^>]*src\s*=\s*["']([^"']+)["'][^>]*\/?>/gi,
+    '![Image: $1]($2)'
+  );
+  
+  // Handle img tags with only src attribute
+  processedContent = processedContent.replace(
+    /<img[^>]*src\s*=\s*["']([^"']+)["'][^>]*\/?>/gi,
+    '![Image]($1)'
+  );
+  
+  // Handle img tags with width/height attributes
+  processedContent = processedContent.replace(
+    /<img[^>]*width\s*=\s*["']([^"']*)["'][^>]*height\s*=\s*["']([^"']*)["'][^>]*src\s*=\s*["']([^"']+)["'][^>]*\/?>/gi,
+    '![Image]($3)'
+  );
+  
+  return processedContent;
+}
+
 export async function generateProjectSummary(dashboardData, sowDocument) {
   try {
     const prompt = `You are a business consultant creating an executive summary for stakeholders at Ellacap, a private equity firm. Your audience consists of business leaders who need to understand project progress in clear, business terms without technical jargon.
