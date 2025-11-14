@@ -375,18 +375,36 @@ function transform({project, issues}){
   const timeAdjustment = timeElapsed - expectedTimeElapsed;
   const adjustedEndDate = new Date(expectedEndDate.getTime() + timeAdjustment);
   
+  // Calculate Phase 1 overall progress (1A, 1B, 1C, and completion)
+  const phase1Keys = ['phase1a', 'phase1b', 'phase1c', 'phase1-completion'];
+  const phase1TotalIssues = phase1Keys.reduce((sum, key) => sum + (phaseMetrics[key]?.totalIssues || 0), 0);
+  const phase1CompletedIssues = phase1Keys.reduce((sum, key) => sum + (phaseMetrics[key]?.completedIssues || 0), 0);
+  const phase1Progress = phase1TotalIssues > 0 ? Math.round((phase1CompletedIssues / phase1TotalIssues) * 100) : 0;
+  const phase1Status = phase1Progress === 100 ? 'completed' : (phase1Progress > 0 ? 'in-progress' : 'upcoming');
+
+  // Calculate Phase 2 overall progress (2A, 2B, 2C, and completion)
+  const phase2Keys = ['phase2a', 'phase2b', 'phase2c', 'phase2-completion'];
+  const phase2TotalIssues = phase2Keys.reduce((sum, key) => sum + (phaseMetrics[key]?.totalIssues || 0), 0);
+  const phase2CompletedIssues = phase2Keys.reduce((sum, key) => sum + (phaseMetrics[key]?.completedIssues || 0), 0);
+  const phase2Progress = phase2TotalIssues > 0 ? Math.round((phase2CompletedIssues / phase2TotalIssues) * 100) : 0;
+  const phase2Status = phase2Progress === 100 ? 'completed' : (phase2Progress > 0 ? 'in-progress' : (phase1Status === 'completed' ? 'ready' : 'upcoming'));
+
   const milestones=[
     {id:1,name:'Phase 1A - Foundation',targetDate:new Date(projectStart.getTime() + (4 * 7 * 24 * 60 * 60 * 1000)).toISOString(),status:phaseMetrics.phase1a.progress === 100 ? 'completed' : 'in-progress',progress:phaseMetrics.phase1a.progress,description:'Infrastructure & security setup'},
-    {id:2,name:'Phase 1 - Feature Ready',targetDate:new Date(projectStart.getTime() + (12 * 7 * 24 * 60 * 60 * 1000)).toISOString(),status:progress>50?'in-progress':'upcoming',progress,description:'Core MVP with AI processing'},
-    {id:3,name:'Phase 2 - Production Ready',targetDate:adjustedEndDate.toISOString(),status:'upcoming',progress:Math.max(0,progress-70),description:'Multi-tenant production deployment'}
+    {id:2,name:'Phase 1 - Feature Ready',targetDate:new Date(projectStart.getTime() + (12 * 7 * 24 * 60 * 60 * 1000)).toISOString(),status:phase1Status,progress:phase1Progress,description:'Core MVP with AI processing'},
+    {id:3,name:'Phase 2 - Production Ready',targetDate:adjustedEndDate.toISOString(),status:phase2Status,progress:phase2Progress,description:'Multi-tenant production deployment'}
   ];
   
-  const recentActivity = issues.slice(0,5).map(i=>({
-    date:i.updated_at,
-    type:i.state==='closed'?'completion':'progress',
-    message:`${i.state==='closed'?'Completed':'Updated'}: ${i.title}`,
-    phase: getPhaseFromLabels(i.labels)
-  }));
+  // Sort issues by most recently updated and take the top 5
+  const recentActivity = [...issues]
+    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+    .slice(0, 5)
+    .map(i=>({
+      date:i.updated_at,
+      type:i.state==='closed'?'completion':'progress',
+      message:`${i.state==='closed'?'Completed':'Updated'}: ${i.title}`,
+      phase: getPhaseFromLabels(i.labels)
+    }));
   
   return {
     project:{
