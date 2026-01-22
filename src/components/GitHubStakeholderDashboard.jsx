@@ -105,7 +105,7 @@ const PROJECT_V2_QUERY = `
           createdAt
           updatedAt
           url
-          items(first: 50) {
+          items(first: 100) {
             nodes {
               id
               content {
@@ -167,7 +167,7 @@ const PROJECT_V2_QUERY = `
           createdAt
           updatedAt
           url
-          items(first: 50) {
+          items(first: 100) {
             nodes {
               id
               content {
